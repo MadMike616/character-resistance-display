@@ -1,0 +1,85 @@
+[
+  {
+    "type": "TextBoxWidget",
+    "name": "PhysicalResistanceTitle",
+    "fields": {
+      "rect": { "x": 608, "y": 1435, "width": 325, "height": 59 },
+      "text": "Physical Resistance",
+      "style": {
+        "fontColor": "$FontColorWhite",
+        "fontFace": "Formal",
+        "pointSize": "$SmallFontSize",
+        "alignment": { "h": "center", "v": "center" }
+      }
+    }
+  },
+  {
+    "type": "TextBoxWidget",
+    "name": "PhysicalText",
+    "fields": {
+      "rect": { "x": 938, "y": 1435, "width": 113, "height": 59 },
+      "text": "                               ",
+      "style": {
+        "fontColor": { "r": 255, "g": 255, "b": 255, "a": 255 },
+        "pointSize": "$SmallFontSize",
+        "alignment": { "h": "center", "v": "center" }
+      }
+    }
+  },
+  {
+    "type": "TextBoxWidget",
+    "name": "PhysicalCapText",
+    "fields": {
+      "visible": false,
+      "rect": { "x": 938, "y": 1435, "width": 113, "height": 59 },
+      "text": "                               ",
+      "style": {
+        "fontColor": "$FontColorGold",
+        "pointSize": "$SmallFontSize",
+        "alignment": { "h": "center", "v": "center" }
+      }
+    }
+  },
+  {
+    "type": "TextBoxWidget",
+    "name": "MagicResistanceTitle",
+    "fields": {
+      "rect": { "x": 608, "y": 1517, "width": 325, "height": 59 },
+      "text": "Magic Resistance",
+      "style": {
+        "fontColor": "$FontColorWhite",
+        "fontFace": "Formal",
+        "pointSize": "$SmallFontSize",
+        "alignment": { "h": "center", "v": "center" }
+      }
+    }
+  },
+  {
+    "type": "TextBoxWidget",
+    "name": "MagicText",
+    "fields": {
+      "rect": { "x": 938, "y": 1517, "width": 113, "height": 59 },
+      "text": "                               ",
+      "style": {
+        "fontColor": { "r": 255, "g": 255, "b": 255, "a": 255 },
+        "pointSize": "$SmallFontSize",
+        "alignment": { "h": "center", "v": "center" }
+      }
+    }
+  },
+  {
+    "type": "TextBoxWidget",
+    "name": "MagicCapText",
+    "fields": {
+      "visible": false,
+      "rect": { "x": 938, "y": 1517, "width": 113, "height": 59 },
+      "text": "                               ",
+      "style": {
+        "fontColor": "$FontColorGold",
+        "pointSize": "$SmallFontSize",
+        "alignment": { "h": "center", "v": "center" }
+      }
+    }
+  }
+]
+
