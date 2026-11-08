@@ -69,7 +69,7 @@ constexpr D2RL::PluginInfo PluginInfo{
 	.abiVersion = D2RL_PLUGIN_ABI_VERSION,
 	.id = "character-resistance-display",
 	.name = "Character Resistance Display",
-	.version = "0.1.8",
+	.version = "0.1.9",
 	.author = "MadMike",
 	.description = "Displays physical and magic resistance on the player and mercenary stat panels.",
 	.flags = D2RL::PluginFlags::Client | D2RL::PluginFlags::ModScopedOnly | D2RL::PluginFlags::NativeHooks,
