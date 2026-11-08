@@ -1,0 +1,89 @@
+[
+  {
+    "type": "TextBoxWidget",
+    "name": "ControllerPhysicalResistanceTitle",
+    "fields": {
+      "rect": { "x": 1989, "y": 842, "width": 488, "height": 79 },
+      "text": "                               ",
+      "style": { "pointSize": "$XMediumFontSize" }
+    },
+    "children": [
+      {
+        "type": "FocusableWidget",
+        "name": "Tooltip",
+        "fields": {
+          "fitToParent": true,
+          "tooltipString": "Reduces Physical damage received.",
+          "tooltipStyle": "$TooltipStyle"
+        }
+      }
+    ]
+  },
+  {
+    "type": "TextBoxWidget",
+    "name": "ControllerPhysicalText",
+    "fields": {
+      "rect": { "x": 2481, "y": 842, "width": 197, "height": 79 },
+      "text": "                               ",
+      "style": { "pointSize": "$XMediumFontSize" }
+    }
+  },
+  {
+    "type": "TextBoxWidget",
+    "name": "ControllerPhysicalCapText",
+    "fields": {
+      "visible": false,
+      "rect": { "x": 2481, "y": 842, "width": 197, "height": 79 },
+      "text": "                               ",
+      "style": {
+        "fontColor": "$FontColorGold",
+        "pointSize": "$XMediumFontSize",
+        "alignment": { "h": "center", "v": "center" }
+      }
+    }
+  },
+  {
+    "type": "TextBoxWidget",
+    "name": "ControllerMagicResistanceTitle",
+    "fields": {
+      "rect": { "x": 1989, "y": 950, "width": 488, "height": 79 },
+      "text": "                               ",
+      "style": { "pointSize": "$XMediumFontSize" }
+    },
+    "children": [
+      {
+        "type": "FocusableWidget",
+        "name": "Tooltip",
+        "fields": {
+          "fitToParent": true,
+          "tooltipString": "Reduces Magic damage received.",
+          "tooltipStyle": "$TooltipStyle"
+        }
+      }
+    ]
+  },
+  {
+    "type": "TextBoxWidget",
+    "name": "ControllerMagicText",
+    "fields": {
+      "rect": { "x": 2481, "y": 950, "width": 197, "height": 79 },
+      "text": "                               ",
+      "style": { "pointSize": "$XMediumFontSize" }
+    }
+  },
+  {
+    "type": "TextBoxWidget",
+    "name": "ControllerMagicCapText",
+    "fields": {
+      "visible": false,
+      "rect": { "x": 2481, "y": 950, "width": 197, "height": 79 },
+      "text": "                               ",
+      "style": {
+        "fontColor": "$FontColorGold",
+        "pointSize": "$XMediumFontSize",
+        "alignment": { "h": "center", "v": "center" }
+      }
+    }
+  }
+]
+
