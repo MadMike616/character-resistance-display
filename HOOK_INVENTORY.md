@@ -1,38 +1,39 @@
-# Hook Inventory
+# Hook Inventory — Character Resistance Display
 
-Plugin: Character Resistance Display (`character-resistance-display`)
-Release: 0.1.8 (2026-11-08)
-SDK / ABI: D2RLoader PluginSDK 0.4.0 / Plugin ABI 4
+## Plugin metadata
 
-## Installed hook sites
+| Field | Value |
+|---|---|
+| Plugin name | Character Resistance Display |
+| Plugin ID | character-resistance-display |
+| Release version | 0.1.8 |
+| Inventory updated | 2026-11-08 |
+| Source revision | v0.1.8 GitHub release tag |
+| D2R build(s) audited | Not validated |
+| D2RLoader SDK / Plugin ABI | 0.4.0 / 4 |
+| Audit status | Complete |
 
-This release installs no inline hooks, byte patches, vtable hooks, or OS input
-hooks. There are no hook-site changes in this release. The source declares the
-`PluginFlags::NativeHooks` flag, but does not stage or commit a mutation through
-the SDK mutation service.
+## Scope and method
 
-## Signature-guarded native call targets
+Inspected the plugin source tree, including src/plugin.cpp, src/plugin.rc, CMakeLists.txt, and the embedded-config build integration. The audit checked plugin-owned inline detours, CALL/JMP redirects, byte/NOP patches, vtable or shared-slot replacements, MinHook targets, and Win32 input/message hooks. Ordinary D2RLoader lifecycle, panel, draw, and input callbacks and native helper calls are not hook sites.
 
-The plugin calls these D2R.exe functions after validating the listed leading
-bytes with `CheckExpectedBytes`. These are direct-call targets, not installed
-hook sites:
+## Hook sites
 
-| Function | RVA | Validated bytes | Purpose |
-| --- | ---: | ---: | --- |
-| `GetLocalDataContext` | `0x08B2D0` | 32 | Resolve active local-player context |
-| `GetLocalPlayer` | `0x09A480` | 32 | Resolve player unit |
-| `GetUnit` | `0x09A5D0` | 6 | Resolve mercenary unit |
-| `GetPet` / mercenary ID reader | `0x13ABC0` | 12 | Read the mercenary unit ID |
-| `FindTopLevelPanel` | `0x0846170` | 22 | Find character/hireling panel |
-| `FindChildWidgetByName` | `0x0856220` | 32 | Find added resistance widgets |
-| `GetWidgetRect` | `0x08562A0` | 32 | Validate and update native widget rect |
+| Site ID | Type | Target | Address / identifier | Operation | Guard / validation | Source reference | Notes |
+|---|---|---|---|---|---|---|---|
 
-The plugin also resolves `ReadWideUnitStat` from `D2RCore.dll` by export name.
-The legacy native UI path uses structure offsets `0x70` for widget rectangles
-and `0x88` for text-buffer pointers; these are data-field offsets, not hook
-targets. The compatibility path is enabled only when its expected function
-signatures match.
+No direct hook sites found in the audit.
 
-No prior public release exists for comparison. Recheck these call targets and
-the validated byte signatures during the next release preparation.
+## Known collision overlaps
+
+List only overlaps supported by the current source audit. Include the other plugin and shared target. If none are known, write “None identified in the current inventory; this is not a compatibility guarantee.”
+
+| Other plugin | Shared target | Relationship | Evidence / notes |
+|---|---|---|---|
+
+None identified in the current inventory; this is not a compatibility guarantee.
+
+## Audit notes
+
+The plugin declares the NativeHooks capability flag but does not install or replace a native or operating-system hook target. CheckExpectedBytes validates direct native helper calls at RVAs 0x08B2D0, 0x09A480, 0x09A5D0, 0x13ABC0, 0x0846170, 0x0856220, and 0x08562A0; these calls are not hook sites. The plugin also resolves ReadWideUnitStat by D2RCore.dll export name. The audit is source-level; no specific D2R build was validated.
 
