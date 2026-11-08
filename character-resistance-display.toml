@@ -1,0 +1,40 @@
+# Restart D2RLoader after changing these settings.
+# All display switches are grouped at the top of this file.
+
+[enabled]
+character_physical = true
+character_magic = true
+controller_character_physical = false
+controller_character_magic = false
+mercenary_physical = true
+mercenary_magic = true
+
+# Each x/y pair anchors the label and its value together. Their horizontal
+# spacing and text box sizes are built in and remain paired when moved.
+
+[desktop.physical]
+x = 93
+y = 1321
+
+[desktop.magic]
+x = 598
+y = 1321
+
+# Controller character-sheet support is partial and disabled by default.
+[controller.physical]
+x = 1989
+y = 842
+
+[controller.magic]
+x = 1989
+y = 950
+
+# Desktop HD hireling panel rows. These display the mercenary's own values.
+[mercenary.physical]
+x = 608
+y = 1435
+
+[mercenary.magic]
+x = 608
+y = 1517
+
