@@ -6,9 +6,9 @@
 |---|---|
 | Plugin name | Character Resistance Display |
 | Plugin ID | character-resistance-display |
-| Release version | 0.1.8 |
+| Release version | 0.1.9 |
 | Inventory updated | 2026-11-08 |
-| Source revision | v0.1.8 GitHub release tag |
+| Source revision | v0.1.9 GitHub release tag |
 | D2R build(s) audited | Not validated |
 | D2RLoader SDK / Plugin ABI | 0.4.0 / 4 |
 | Audit status | Complete |
@@ -36,4 +36,6 @@ None identified in the current inventory; this is not a compatibility guarantee.
 ## Audit notes
 
 The plugin declares the NativeHooks capability flag but does not install or replace a native or operating-system hook target. CheckExpectedBytes validates direct native helper calls at RVAs 0x08B2D0, 0x09A480, 0x09A5D0, 0x13ABC0, 0x0846170, 0x0856220, and 0x08562A0; these calls are not hook sites. The plugin also resolves ReadWideUnitStat by D2RCore.dll export name. The audit is source-level; no specific D2R build was validated.
+
+
 
