@@ -1,0 +1,34 @@
+#include <D2RLPlugin/resource.h>
+#include <D2RLPlugin/version.h>
+#include <winver.h>
+
+D2RL_PLUGIN_MANIFEST_RESOURCE_ID RCDATA { D2RL_PLUGIN_RESOURCE_DWORD(D2RL_PLUGIN_ABI_VERSION) }
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 0,1,8,0
+ PRODUCTVERSION 0,1,8,0
+ FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+ FILEFLAGS 0
+ FILEOS VOS_NT_WINDOWS32
+ FILETYPE VFT_DLL
+ FILESUBTYPE VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName", "MadMike\0"
+            VALUE "FileDescription", "Character Resistance Display D2RLoader plugin\0"
+            VALUE "FileVersion", "0.1.8.0\0"
+            VALUE "InternalName", "character-resistance-display.dll\0"
+            VALUE "OriginalFilename", "character-resistance-display.dll\0"
+            VALUE "ProductName", "Character Resistance Display\0"
+            VALUE "ProductVersion", "0.1.8.0\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 1200
+    END
+END
+
