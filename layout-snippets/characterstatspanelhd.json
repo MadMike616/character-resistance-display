@@ -1,0 +1,107 @@
+[
+  {
+    "type": "TextBoxWidget",
+    "name": "PhysicalResistanceTitle",
+    "fields": {
+      "rect": { "x": 93, "y": 1321, "width": 359, "height": 57 },
+      "text": "Physical Resistance",
+      "style": {
+        "fontColor": "$FontColorWhite",
+        "fontFace": "Formal",
+        "pointSize": "$SmallPanelFontSize",
+        "spacing": "$ReducedSpacing",
+        "alignment": { "h": "center", "v": "center" }
+      }
+    },
+    "children": [
+      {
+        "type": "FocusableWidget",
+        "name": "Tooltip",
+        "fields": {
+          "fitToParent": true,
+          "tooltipString": "Reduces Physical damage received.",
+          "tooltipStyle": "$TooltipStyle"
+        }
+      }
+    ]
+  },
+  {
+    "type": "TextBoxWidget",
+    "name": "PhysicalText",
+    "fields": {
+      "rect": { "x": 455, "y": 1321, "width": 113, "height": 57 },
+      "text": "                               ",
+      "style": {
+        "pointSize": "$MediumPanelFontSize",
+        "alignment": { "h": "center", "v": "center" }
+      }
+    }
+  },
+  {
+    "type": "TextBoxWidget",
+    "name": "PhysicalCapText",
+    "fields": {
+      "visible": false,
+      "rect": { "x": 455, "y": 1321, "width": 113, "height": 57 },
+      "text": "                               ",
+      "style": {
+        "fontColor": "$FontColorGold",
+        "pointSize": "$MediumPanelFontSize",
+        "alignment": { "h": "center", "v": "center" }
+      }
+    }
+  },
+  {
+    "type": "TextBoxWidget",
+    "name": "MagicResistanceTitle",
+    "fields": {
+      "rect": { "x": 598, "y": 1321, "width": 359, "height": 57 },
+      "text": "Magic Resistance",
+      "style": {
+        "fontColor": "$FontColorWhite",
+        "fontFace": "Formal",
+        "pointSize": "$SmallPanelFontSize",
+        "spacing": "$ReducedSpacing",
+        "alignment": { "h": "center", "v": "center" }
+      }
+    },
+    "children": [
+      {
+        "type": "FocusableWidget",
+        "name": "Tooltip",
+        "fields": {
+          "fitToParent": true,
+          "tooltipString": "Reduces Magic damage received.",
+          "tooltipStyle": "$TooltipStyle"
+        }
+      }
+    ]
+  },
+  {
+    "type": "TextBoxWidget",
+    "name": "MagicText",
+    "fields": {
+      "rect": { "x": 961, "y": 1321, "width": 113, "height": 57 },
+      "text": "                               ",
+      "style": {
+        "pointSize": "$MediumPanelFontSize",
+        "alignment": { "h": "center", "v": "center" }
+      }
+    }
+  },
+  {
+    "type": "TextBoxWidget",
+    "name": "MagicCapText",
+    "fields": {
+      "visible": false,
+      "rect": { "x": 961, "y": 1321, "width": 113, "height": 57 },
+      "text": "                               ",
+      "style": {
+        "fontColor": "$FontColorGold",
+        "pointSize": "$MediumPanelFontSize",
+        "alignment": { "h": "center", "v": "center" }
+      }
+    }
+  }
+]
+
