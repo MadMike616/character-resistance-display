@@ -9,7 +9,8 @@ Resistance displays up to 75%. Values at or above their cap are capped and
 shown in gold. Resistance values have no hover tooltips.
 
 Release 0.1.8 SHA-256 (`character-resistance-display.dll`):
-`CBF2F0EC3F4851B69521D6B9A68F8F7DDEBA75A72DD9BF26F86879CF19F981DF`.
+`B65A2601211E5792AD54A674DC7F2AB3969685ECC000B78C775E475626F6CE0A`.
+This DLL was rebuilt from the 0.1.8 source with optimized MSVC Release flags (/O2 /Ob2 /DNDEBUG /MD) and contains no CodeView/PDB debug data.
 
 ## Install
 
@@ -119,4 +120,6 @@ changes resistance and confirm the corresponding panel refreshes. Save and
 quit to character select, enter a character again without restarting
 D2RLoader, and confirm both panels update. A genuine zero resistance displays
 as `0%`.
+
+
 
