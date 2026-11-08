@@ -8,9 +8,9 @@ desktop HD hireling panel. Physical Resistance displays up to 50%; Magic
 Resistance displays up to 75%. Values at or above their cap are capped and
 shown in gold. Resistance values have no hover tooltips.
 
-Release 0.1.8 SHA-256 (`character-resistance-display.dll`):
-`B65A2601211E5792AD54A674DC7F2AB3969685ECC000B78C775E475626F6CE0A`.
-This DLL was rebuilt from the 0.1.8 source with optimized MSVC Release flags (/O2 /Ob2 /DNDEBUG /MD) and contains no CodeView/PDB debug data.
+Release 0.1.9 SHA-256 (`character-resistance-display.dll`):
+`0003ECD2CA90E940A62B8077B3E70B44B3743449AED7884F933311371B3F49CB`.
+This DLL was rebuilt from the 0.1.9 source with optimized MSVC Release flags (/O2 /Ob2 /DNDEBUG /MD) and contains no CodeView/PDB debug data.
 
 ## Install
 
@@ -120,6 +120,10 @@ changes resistance and confirm the corresponding panel refreshes. Save and
 quit to character select, enter a character again without restarting
 D2RLoader, and confirm both panels update. A genuine zero resistance displays
 as `0%`.
+
+
+
+
 
 
 
