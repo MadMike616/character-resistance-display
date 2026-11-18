@@ -1,0 +1,6 @@
+#include "setup_resources.h"
+
+CRD_DESKTOP_WIDGETS RCDATA "@CMAKE_CURRENT_SOURCE_DIR@/layout-snippets/characterstatspanelhd.json"
+CRD_MERCENARY_WIDGETS RCDATA "@CMAKE_CURRENT_SOURCE_DIR@/layout-snippets/hirelinginventorypanelhd.json"
+CRD_CONTROLLER_WIDGETS RCDATA "@CMAKE_CURRENT_SOURCE_DIR@/layout-snippets/controller-characterstatspanelhd.json"
+CRD_DESKTOP_SPRITE RCDATA "@CMAKE_CURRENT_SOURCE_DIR@/assets/data/hd/global/ui/panel/character_sheet/character_background.sprite"

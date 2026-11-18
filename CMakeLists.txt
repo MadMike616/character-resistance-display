@@ -17,19 +17,27 @@ if(NOT EXISTS "${D2RLPLUGIN_SDK_SOURCE_DIR}/CMakeLists.txt")
 endif()
 add_subdirectory("${D2RLPLUGIN_SDK_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/plugin-sdk")
 
+configure_file(src/setup_assets.rc.in setup_assets.rc @ONLY)
+set_property(SOURCE "${CMAKE_CURRENT_BINARY_DIR}/setup_assets.rc" PROPERTY OBJECT_DEPENDS
+	"${CMAKE_CURRENT_SOURCE_DIR}/layout-snippets/characterstatspanelhd.json;${CMAKE_CURRENT_SOURCE_DIR}/layout-snippets/hirelinginventorypanelhd.json;${CMAKE_CURRENT_SOURCE_DIR}/layout-snippets/controller-characterstatspanelhd.json;${CMAKE_CURRENT_SOURCE_DIR}/assets/data/hd/global/ui/panel/character_sheet/character_background.sprite")
+
 add_library(CharacterResistanceDisplay SHARED
 	src/plugin.cpp
+	src/loose_ui_setup.cpp
 	src/plugin.rc
+	"${CMAKE_CURRENT_BINARY_DIR}/setup_assets.rc"
 )
 
+target_include_directories(CharacterResistanceDisplay PRIVATE src)
+target_include_directories(CharacterResistanceDisplay SYSTEM PRIVATE third_party)
 target_link_libraries(CharacterResistanceDisplay PRIVATE D2RLPlugin::D2RLPlugin)
 target_compile_features(CharacterResistanceDisplay PRIVATE cxx_std_20)
 if(MSVC)
 	target_compile_options(CharacterResistanceDisplay PRIVATE /W4 /permissive- /EHsc /utf-8)
+	target_compile_definitions(CharacterResistanceDisplay PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX UNICODE _UNICODE)
 endif()
 
 d2rlplugin_embed_config(
 	TARGET CharacterResistanceDisplay
 	FILE "${CMAKE_CURRENT_SOURCE_DIR}/character-resistance-display.toml"
 )
-

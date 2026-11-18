@@ -9,3 +9,5 @@ code and documentation, not to these sprite resources.
 No mercenary or controller sprite resources are included. Users who enable
 those rows must provide their own matching modified sprites for their mod.
 
+The first-run installer uses JSON for Modern C++ 3.12.0 by Niels Lohmann.
+See [its MIT license](third_party/nlohmann/LICENSE.MIT).

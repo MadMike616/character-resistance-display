@@ -2,6 +2,9 @@
 
 #include <Windows.h>
 
+#include "i_hate_tomls_client.h"
+#include "loose_ui_setup.h"
+
 #include <algorithm>
 #include <array>
 #include <atomic>
@@ -10,6 +13,8 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <mutex>
+#include <string>
 #include <string_view>
 
 namespace {
@@ -69,11 +74,110 @@ constexpr D2RL::PluginInfo PluginInfo{
 	.abiVersion = D2RL_PLUGIN_ABI_VERSION,
 	.id = "character-resistance-display",
 	.name = "Character Resistance Display",
-	.version = "0.1.9",
+	.version = "1.1.9",
 	.author = "MadMike",
 	.description = "Displays physical and magic resistance on the player and mercenary stat panels.",
 	.flags = D2RL::PluginFlags::Client | D2RL::PluginFlags::ModScopedOnly | D2RL::PluginFlags::NativeHooks,
 };
+
+constexpr char SettingsMenuSchema[] = R"TOML(title = "Character Resistance Display"
+
+[[setting]]
+type = "header"
+label = "Display switches"
+
+[[setting]]
+key = "enabled.character_physical"
+type = "bool"
+label = "Show Physical Resistance on the character sheet"
+
+[[setting]]
+key = "enabled.character_magic"
+type = "bool"
+label = "Show Magic Resistance on the character sheet"
+
+[[setting]]
+key = "enabled.controller_character_physical"
+type = "bool"
+label = "Show Physical Resistance on the controller character sheet"
+note = "Controller support is partial and requires user-supplied modified sprites."
+
+[[setting]]
+key = "enabled.controller_character_magic"
+type = "bool"
+label = "Show Magic Resistance on the controller character sheet"
+note = "Controller support is partial and requires user-supplied modified sprites."
+
+[[setting]]
+key = "enabled.mercenary_physical"
+type = "bool"
+label = "Show Physical Resistance on the mercenary panel"
+note = "Requires a user-supplied modified mercenary sprite."
+
+[[setting]]
+key = "enabled.mercenary_magic"
+type = "bool"
+label = "Show Magic Resistance on the mercenary panel"
+note = "Requires a user-supplied modified mercenary sprite."
+
+[[setting]]
+type = "header"
+label = "Text positions"
+
+[[setting]]
+key = "desktop.physical"
+type = "position"
+label = "Character sheet: Physical Resistance"
+hint = "Moves the label and value together."
+min = -8192
+max = 7830
+default = [93, 1321]
+
+[[setting]]
+key = "desktop.magic"
+type = "position"
+label = "Character sheet: Magic Resistance"
+hint = "Moves the label and value together."
+min = -8192
+max = 7829
+default = [598, 1321]
+
+[[setting]]
+key = "controller.physical"
+type = "position"
+label = "Controller sheet: Physical Resistance"
+hint = "Moves the label and value together. Requires user-supplied modified sprites."
+min = -8192
+max = 7700
+default = [1989, 842]
+
+[[setting]]
+key = "controller.magic"
+type = "position"
+label = "Controller sheet: Magic Resistance"
+hint = "Moves the label and value together. Requires user-supplied modified sprites."
+min = -8192
+max = 7700
+default = [1989, 950]
+
+[[setting]]
+key = "mercenary.physical"
+type = "position"
+label = "Mercenary panel: Physical Resistance"
+hint = "Moves the label and value together. Requires a user-supplied modified mercenary sprite."
+min = -8192
+max = 7862
+default = [608, 1435]
+
+[[setting]]
+key = "mercenary.magic"
+type = "position"
+label = "Mercenary panel: Magic Resistance"
+hint = "Moves the label and value together. Requires a user-supplied modified mercenary sprite."
+min = -8192
+max = 7862
+default = [608, 1517]
+)TOML";
 
 struct RectConfig {
 	D2RL::Widgets::Rect rect{};
@@ -136,6 +240,7 @@ struct NativeWidgetSet {
 };
 
 const D2RL::PluginContext* Context{};
+PluginMenu::Connection SettingsMenu{};
 const D2RL::WidgetService* WidgetApi{};
 const D2RL::ThreadService* ThreadApi{};
 const D2RL::LifecycleService* LifecycleApi{};
@@ -148,6 +253,9 @@ FindTopLevelPanelFn FindTopLevelPanel{};
 FindChildWidgetByNameFn FindChildWidgetByName{};
 GetNativeWidgetRectFn GetNativeWidgetRect{};
 PluginConfig Config{};
+std::mutex ConfigMutex{};
+
+void QueueUiRefresh(const D2RL::PluginContext* context) noexcept;
 
 D2RL::Widgets::WidgetHandle CharacterPanel{};
 D2RL::Widgets::WidgetHandle MercenaryPanel{};
@@ -363,7 +471,7 @@ auto ResolveEnabled(DisplayToggles& enabled, std::string_view key) noexcept -> b
 	return nullptr;
 }
 
-auto ParseConfig(const char* text) noexcept -> bool {
+auto ParseConfig(const char* text, PluginConfig& config) noexcept -> bool {
 	if (text == nullptr) return false;
 	std::string_view input(text);
 	std::string_view section;
@@ -388,7 +496,7 @@ auto ParseConfig(const char* text) noexcept -> bool {
 		const auto key = Trim(line.substr(0, equals));
 		auto value = Trim(line.substr(equals + 1));
 		if (section == "enabled") {
-			auto* toggle = ResolveEnabled(Config.enabled, key);
+			auto* toggle = ResolveEnabled(config.enabled, key);
 			if (toggle == nullptr) continue;
 			if (value == "true") *toggle = true;
 			else if (value == "false") *toggle = false;
@@ -397,17 +505,17 @@ auto ParseConfig(const char* text) noexcept -> bool {
 		}
 		if (section == "controller" && key == "enabled") {
 			if (value == "true") {
-				Config.enabled.controllerCharacterPhysical = true;
-				Config.enabled.controllerCharacterMagic = true;
+				config.enabled.controllerCharacterPhysical = true;
+				config.enabled.controllerCharacterMagic = true;
 			} else if (value == "false") {
-				Config.enabled.controllerCharacterPhysical = false;
-				Config.enabled.controllerCharacterMagic = false;
+				config.enabled.controllerCharacterPhysical = false;
+				config.enabled.controllerCharacterMagic = false;
 			}
 			else valid = false;
 			continue;
 		}
 
-		const auto position = ResolvePosition(Config, section);
+		const auto position = ResolvePosition(config, section);
 		if (position.label != nullptr && position.value != nullptr) {
 			std::int32_t parsed{};
 			const auto result = std::from_chars(value.data(), value.data() + value.size(), parsed, 10);
@@ -429,7 +537,7 @@ auto ParseConfig(const char* text) noexcept -> bool {
 			continue;
 		}
 
-		auto* rect = ResolveRect(Config, section);
+		auto* rect = ResolveRect(config, section);
 		if (rect == nullptr) continue;
 		std::int32_t parsed{};
 		const auto result = std::from_chars(value.data(), value.data() + value.size(), parsed, 10);
@@ -452,20 +560,20 @@ auto ParseConfig(const char* text) noexcept -> bool {
 		return validRect(layout.physicalLabel.rect) && validRect(layout.physicalValue.rect)
 			&& validRect(layout.magicLabel.rect) && validRect(layout.magicValue.rect);
 	};
-	return valid && validLayout(Config.desktop) && validLayout(Config.controller) && validLayout(Config.mercenary);
+	return valid && validLayout(config.desktop) && validLayout(config.controller) && validLayout(config.mercenary);
 }
 
-void SetDefaultConfig() noexcept {
-	Config.enabled = {true, true, false, false, true, true};
-	Config.desktop = {
+void SetDefaultConfig(PluginConfig& config) noexcept {
+	config.enabled = {true, true, false, false, true, true};
+	config.desktop = {
 		{ {93, 1321, 359, 57} }, { {455, 1321, 113, 57} },
 		{ {598, 1321, 359, 57} }, { {961, 1321, 113, 57} },
 	};
-	Config.controller = {
+	config.controller = {
 		{ {1989, 842, 488, 79} }, { {2481, 842, 197, 79} },
 		{ {1989, 950, 488, 79} }, { {2481, 950, 197, 79} },
 	};
-	Config.mercenary = {
+	config.mercenary = {
 		{ {608, 1435, 325, 59} }, { {938, 1435, 113, 59} },
 		{ {608, 1517, 325, 59} }, { {938, 1517, 113, 59} },
 	};
@@ -474,21 +582,213 @@ void SetDefaultConfig() noexcept {
 void LoadConfig(const D2RL::PluginContext* context) noexcept {
 	// Player defaults mirror the current active TOML; mercenary defaults use the
 	// two extra HD hireling resistance rows in the active sprite.
-	SetDefaultConfig();
+	PluginConfig loaded{};
+	SetDefaultConfig(loaded);
 
 	std::array<char, 32 * 1024> text{};
 	std::uint32_t requiredSize{};
 	if (!context->ReadConfig(text.data(), static_cast<std::uint32_t>(text.size()), &requiredSize)) {
+		std::scoped_lock lock(ConfigMutex);
+		Config = loaded;
 		context->LogWarn("Character Resistance Display: couldn't read its TOML config; using the built-in layout positions.");
 		return;
 	}
 	text.back() = '\0';
-	if (!ParseConfig(text.data())) {
-		SetDefaultConfig();
+	if (!ParseConfig(text.data(), loaded)) {
+		SetDefaultConfig(loaded);
+		std::scoped_lock lock(ConfigMutex);
+		Config = loaded;
 		context->LogWarn("Character Resistance Display: invalid TOML settings; using the built-in positions and display switches.");
 		return;
 	}
+	{
+		std::scoped_lock lock(ConfigMutex);
+		Config = loaded;
+	}
 	context->LogInfo("Character Resistance Display: loaded widget positions from TOML.");
+}
+
+struct ConfigValueEdit {
+	std::string_view section;
+	std::string_view key;
+	std::string_view value;
+};
+
+auto RewriteConfigValues(std::string_view document, const ConfigValueEdit* edits,
+	std::size_t editCount, std::string& updated) noexcept -> bool {
+	if (edits == nullptr || editCount == 0 || editCount > 2) return false;
+	try {
+		std::array<unsigned, 2> matches{};
+		std::string_view section;
+		updated.clear();
+		updated.reserve(document.size() + 64);
+		for (std::size_t lineStart = 0; lineStart < document.size();) {
+			const auto newline = document.find('\n', lineStart);
+			const auto nextLine = newline == std::string_view::npos ? document.size() : newline + 1;
+			auto lineEnd = newline == std::string_view::npos ? document.size() : newline;
+			if (lineEnd > lineStart && document[lineEnd - 1] == '\r') --lineEnd;
+			const auto line = document.substr(lineStart, lineEnd - lineStart);
+			const auto ending = document.substr(lineEnd, nextLine - lineEnd);
+			const auto comment = line.find('#');
+			const auto code = line.substr(0, comment);
+			const auto trimmed = Trim(code);
+			if (trimmed.size() >= 2 && trimmed.front() == '[' && trimmed.back() == ']') {
+				section = Trim(trimmed.substr(1, trimmed.size() - 2));
+				updated.append(line);
+			} else {
+				const auto equals = code.find('=');
+				std::size_t matchedEdit = editCount;
+				if (equals != std::string_view::npos) {
+					const auto key = Trim(code.substr(0, equals));
+					for (std::size_t i = 0; i < editCount; ++i) {
+						if (section == edits[i].section && key == edits[i].key) {
+							if (++matches[i] != 1) return false;
+							matchedEdit = i;
+							break;
+						}
+					}
+				}
+				if (matchedEdit == editCount) {
+					updated.append(line);
+				} else {
+					std::size_t valueStart = equals + 1;
+					while (valueStart < code.size() && (code[valueStart] == ' ' || code[valueStart] == '\t')) ++valueStart;
+					std::size_t valueEnd = code.size();
+					while (valueEnd > valueStart && (code[valueEnd - 1] == ' ' || code[valueEnd - 1] == '\t' || code[valueEnd - 1] == '\r')) --valueEnd;
+					if (valueStart == valueEnd) return false;
+					updated.append(line.substr(0, valueStart));
+					updated.append(edits[matchedEdit].value);
+					updated.append(line.substr(valueEnd));
+				}
+			}
+			updated.append(ending);
+			lineStart = nextLine;
+		}
+		for (std::size_t i = 0; i < editCount; ++i) {
+			if (matches[i] != 1) return false;
+		}
+		return true;
+	} catch (...) {
+		return false;
+	}
+}
+
+auto ParseMenuPosition(const char* tomlValue, std::int32_t& x, std::int32_t& y) noexcept -> bool {
+	if (tomlValue == nullptr) return false;
+	std::string_view value = Trim(tomlValue);
+	if (value.size() < 5 || value.front() != '[' || value.back() != ']') return false;
+	value = Trim(value.substr(1, value.size() - 2));
+	const auto comma = value.find(',');
+	if (comma == std::string_view::npos || value.find(',', comma + 1) != std::string_view::npos) return false;
+	const auto first = Trim(value.substr(0, comma));
+	const auto second = Trim(value.substr(comma + 1));
+	if (first.empty() || second.empty()) return false;
+	const auto xResult = std::from_chars(first.data(), first.data() + first.size(), x, 10);
+	const auto yResult = std::from_chars(second.data(), second.data() + second.size(), y, 10);
+	return xResult.ec == std::errc{} && xResult.ptr == first.data() + first.size()
+		&& yResult.ec == std::errc{} && yResult.ptr == second.data() + second.size();
+}
+
+auto ResolveMenuToggle(PluginConfig& config, std::string_view key,
+	std::string_view& configKey) noexcept -> bool* {
+	constexpr std::string_view prefix = "enabled.";
+	if (!key.starts_with(prefix)) return nullptr;
+	configKey = key.substr(prefix.size());
+	return ResolveEnabled(config.enabled, configKey);
+}
+
+auto WriteMenuError(char* error, std::uint32_t errorSize, const char* message) noexcept -> bool {
+	if (error != nullptr && errorSize != 0) (void)std::snprintf(error, errorSize, "%s", message);
+	return false;
+}
+
+bool __cdecl GetMenuSetting(const char* key, char* output, std::uint32_t outputSize, void*) noexcept {
+	if (key == nullptr || output == nullptr || outputSize == 0) return false;
+	try {
+		std::scoped_lock lock(ConfigMutex);
+		const std::string_view settingKey(key);
+		std::string_view configKey;
+		if (auto* toggle = ResolveMenuToggle(Config, settingKey, configKey); toggle != nullptr) {
+			const int written = std::snprintf(output, outputSize, "%s", *toggle ? "true" : "false");
+			return written >= 0 && static_cast<std::uint32_t>(written) < outputSize;
+		}
+		const auto position = ResolvePosition(Config, settingKey);
+		if (position.label == nullptr || position.value == nullptr) return false;
+		const int written = std::snprintf(output, outputSize, "[%d, %d]", position.label->x, position.label->y);
+		return written >= 0 && static_cast<std::uint32_t>(written) < outputSize;
+	} catch (...) {
+		return false;
+	}
+}
+
+bool __cdecl SetMenuSetting(const char* key, const char* tomlValue, char* error,
+	std::uint32_t errorSize, void*) noexcept {
+	if (key == nullptr || tomlValue == nullptr) return WriteMenuError(error, errorSize, "Missing setting or value.");
+	const std::string_view settingKey(key);
+	const bool isTrue = std::strcmp(tomlValue, "true") == 0;
+	const bool isFalse = std::strcmp(tomlValue, "false") == 0;
+	std::int32_t x{};
+	std::int32_t y{};
+	std::string_view configKey;
+	const bool toggleKey = settingKey.starts_with("enabled.");
+	if (toggleKey) {
+		if (!isTrue && !isFalse) return WriteMenuError(error, errorSize, "Enter true or false.");
+	} else if (!ParseMenuPosition(tomlValue, x, y)) {
+		return WriteMenuError(error, errorSize, "Enter a two-number position such as [93, 1321].");
+	}
+
+	const auto* context = Context;
+	if (context == nullptr) return WriteMenuError(error, errorSize, "The plugin is unloading.");
+	try {
+		std::scoped_lock lock(ConfigMutex);
+		std::array<char, 32 * 1024> text{};
+		std::uint32_t requiredSize{};
+		if (!context->ReadConfig(text.data(), static_cast<std::uint32_t>(text.size()), &requiredSize)
+			|| requiredSize >= text.size()) {
+			return WriteMenuError(error, errorSize, "Cannot read the complete plugin TOML.");
+		}
+		text.back() = '\0';
+		const std::string document(text.data(), BoundedTextLength(text.data(), text.size()));
+		std::array<std::string, 2> encodedValues{};
+		std::array<ConfigValueEdit, 2> edits{};
+		std::size_t editCount{};
+		if (toggleKey) {
+			auto* toggle = ResolveMenuToggle(Config, settingKey, configKey);
+			if (toggle == nullptr) return WriteMenuError(error, errorSize, "Unknown setting.");
+			(void)toggle;
+			edits[0] = {"enabled", configKey, isTrue ? "true" : "false"};
+			editCount = 1;
+		} else {
+			const auto position = ResolvePosition(Config, settingKey);
+			if (position.label == nullptr || position.value == nullptr) return WriteMenuError(error, errorSize, "Unknown setting.");
+			if (x < -8192 || x > 8192 - position.valueXOffset || y < -8192 || y > 8192) {
+				return WriteMenuError(error, errorSize, "The position must stay within the supported layout range.");
+			}
+			encodedValues[0] = std::to_string(x);
+			encodedValues[1] = std::to_string(y);
+			edits[0] = {settingKey, "x", encodedValues[0]};
+			edits[1] = {settingKey, "y", encodedValues[1]};
+			editCount = 2;
+		}
+		std::string updated;
+		if (!RewriteConfigValues(document, edits.data(), editCount, updated)) {
+			return WriteMenuError(error, errorSize, "The setting is missing or duplicated in the plugin TOML.");
+		}
+		PluginConfig next{};
+		SetDefaultConfig(next);
+		if (!ParseConfig(updated.c_str(), next)) {
+			return WriteMenuError(error, errorSize, "The updated TOML would contain invalid plugin settings.");
+		}
+		if (!context->WriteConfig(updated.c_str())) {
+			return WriteMenuError(error, errorSize, "The plugin TOML could not be saved; runtime values were kept.");
+		}
+		Config = next;
+	} catch (...) {
+		return WriteMenuError(error, errorSize, "The setting could not be applied.");
+	}
+	SettingsMenu.ValueChanged(key);
+	QueueUiRefresh(context);
+	return true;
 }
 
 enum class PlayerReadFailure : std::uint8_t {
@@ -573,8 +873,6 @@ auto ReadMercenaryResistances(std::int32_t& physical, std::int32_t& magic, bool&
 		return false;
 	}
 }
-
-void QueueUiRefresh(const D2RL::PluginContext* context) noexcept;
 
 void ResetCharacterPanelCache() noexcept {
 	CharacterPanel = D2RL::Widgets::InvalidHandle;
@@ -805,13 +1103,7 @@ void __cdecl RefreshCharacterPanel(const D2RL::PluginContext* context) noexcept 
 	NativeWidgetSet nativeWidgets{};
 	if (NativeUiAvailable && !ResolveNativeWidgetSet("CharacterStatsPanel", controller, nativeWidgets) && !NativeWidgetWarningLogged) {
 		NativeWidgetWarningLogged = true;
-		char message[256]{};
-		(void)std::snprintf(message, sizeof(message),
-			"Character Resistance Display: native widget lookup incomplete (physical label/value/cap %d/%d/%d, magic label/value/cap %d/%d/%d).",
-			nativeWidgets.physicalLabel != nullptr, nativeWidgets.physicalValue != nullptr,
-			nativeWidgets.physicalCapValue != nullptr, nativeWidgets.magicLabel != nullptr,
-			nativeWidgets.magicValue != nullptr, nativeWidgets.magicCapValue != nullptr);
-		context->LogWarn(message);
+		context->LogWarn("Character Resistance Display: native character widget lookup was incomplete; check the HD character-sheet widget names.");
 	}
 
 	const bool available = StatsAvailable.load(std::memory_order_acquire);
@@ -939,6 +1231,7 @@ void __cdecl RefreshMercenaryPanel(const D2RL::PluginContext* context) noexcept 
 void __cdecl RefreshCharacterSheet(const D2RL::PluginContext* context, void*) noexcept {
 	UiRefreshQueued.store(false, std::memory_order_release);
 	if (context == nullptr || WidgetApi == nullptr) return;
+	std::scoped_lock lock(ConfigMutex);
 	RefreshCharacterPanel(context);
 	RefreshMercenaryPanel(context);
 }
@@ -1076,6 +1369,12 @@ D2RL_PLUGIN_EXPORT auto D2RLoaderLoadPlugin(const D2RL::PluginContext* context) 
 	CanSetWidgetRect = false;
 	CanSetWidgetVisible = false;
 	CanGetWidgetState = false;
+	LoadConfig(context);
+	const auto& enabled = Config.enabled;
+	InstallLooseUiFiles(context, enabled.characterPhysical || enabled.characterMagic,
+		enabled.mercenaryPhysical || enabled.mercenaryMagic,
+		enabled.controllerCharacterPhysical || enabled.controllerCharacterMagic);
+	(void)SettingsMenu.Start(context, SettingsMenuSchema, GetMenuSetting, SetMenuSetting, nullptr);
 	if (context->QueryService(&WidgetApi) != D2RL::ServiceQueryResult::Success
 		|| !D2RL::HasWidgetServiceField(WidgetApi, D2RL::WidgetServiceRequiredSize)
 		|| WidgetApi->findPanel == nullptr || WidgetApi->findWidget == nullptr) {
@@ -1115,7 +1414,6 @@ D2RL_PLUGIN_EXPORT auto D2RLoaderLoadPlugin(const D2RL::PluginContext* context) 
 		context->LogWarn("Character Resistance Display: mercenary resistance reads are disabled; player values remain available.");
 	LifecycleTrackingReady.store(RegisterGameplayEventListeners(context), std::memory_order_release);
 	Context = context;
-	LoadConfig(context);
 	WorkerRunning.store(true, std::memory_order_release);
 	if (!CreateTimerQueueTimer(&RefreshTimer, nullptr, RefreshWorkerTick, nullptr, 0, RefreshIntervalMs, WT_EXECUTEDEFAULT)) {
 		WorkerRunning.store(false, std::memory_order_release);
@@ -1132,6 +1430,7 @@ D2RL_PLUGIN_EXPORT auto D2RLoaderLoadPlugin(const D2RL::PluginContext* context) 
 
 D2RL_PLUGIN_EXPORT void D2RLoaderUnloadPlugin() noexcept {
 	WorkerRunning.store(false, std::memory_order_release);
+	SettingsMenu.Stop();
 	if (RefreshTimer != nullptr) {
 		(void)DeleteTimerQueueTimer(nullptr, RefreshTimer, INVALID_HANDLE_VALUE);
 		RefreshTimer = nullptr;
@@ -1160,4 +1459,3 @@ D2RL_PLUGIN_EXPORT void D2RLoaderUnloadPlugin() noexcept {
 	CanSetWidgetVisible = false;
 	CanGetWidgetState = false;
 }
-

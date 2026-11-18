@@ -8,47 +8,59 @@ desktop HD hireling panel. Physical Resistance displays up to 50%; Magic
 Resistance displays up to 75%. Values at or above their cap are capped and
 shown in gold. Resistance values have no hover tooltips.
 
-Release 0.1.9 SHA-256 (`character-resistance-display.dll`):
-`0003ECD2CA90E940A62B8077B3E70B44B3743449AED7884F933311371B3F49CB`.
-This DLL was rebuilt from the 0.1.9 source with optimized MSVC Release flags (/O2 /Ob2 /DNDEBUG /MD) and contains no CodeView/PDB debug data.
+Download the DLL and optional TOML from the [GitHub Releases page](https://github.com/MadMike616/character-resistance-display/releases/latest).
+The release notes provide the DLL's SHA-256 checksum.
 
 ## Install
 
 1. Put `character-resistance-display.dll` in
    `<game>\mods\<mod-name>\d2rloader\plugins\`.
-2. Copy `character-resistance-display.toml` to
-   `<game>\mods\<mod-name>\d2rloader\config\`.
-3. The repository includes modified character-sheet background sprites under
-   `assets\data\hd\global\ui\panel\character_sheet\`. Copy the contents of
-   `assets` into `<game>\mods\<mod-name>\<mod-name>.mpq\` so the sprite files
-   land under `data\hd\global\ui\panel\character_sheet\`.
-4. Merge the widget objects from `layout-snippets\characterstatspanelhd.json`
-   into the `children` array of
-   `<game>\mods\<mod-name>\<mod-name>.mpq\data\global\ui\layouts\characterstatspanelhd.json`.
-   The mercenary widgets are in
-   `layout-snippets\hirelinginventorypanelhd.json`; merge those objects into
-   the `children` array of
-   `<game>\mods\<mod-name>\<mod-name>.mpq\data\global\ui\layouts\hirelinginventorypanelhd.json`.
-5. Restart D2RLoader after changing the TOML or layout files.
+2. If a layout is missing from the unpacked mod's loose data folder, use
+   **Ladik's Casc Viewer** to extract the original JSON from the game data
+   version your mod uses. Put it under
+   `<game>\mods\<mod-name>\d2rloader\plugins\basefiles-and-backups\basefiles\`,
+   keeping the path relative to `data`. For example:
+   `basefiles\global\ui\layouts\characterstatspanelhd.json`.
+3. Launch D2RLoader with the mod. Setup merges the resistance widgets into
+   the loose layout, creating it from the original if needed. It installs
+   the bundled HD desktop sprite if missing. During desktop layout setup,
+   it also replaces a loose desktop sprite that matches the original in
+   `basefiles`. Other existing artwork is kept.
+4. After setup writes files, exit and relaunch D2RLoader with the same mod
+   to load them.
 
-The desktop character-sheet HD sprite is included. The low-end character
-sprite is included for completeness, but the plugin does not add text widgets
-to low-resolution layouts. The mercenary and controller sprite artwork is not
-included: users who want those rows must provide their own modified sprites.
-For the desktop HD mercenary panel, provide
-`<game>\mods\<mod-name>\<mod-name>.mpq\data\hd\global\ui\panel\hireling\hirelingpanel.sprite`
-and apply the hireling layout snippet. Controller character-sheet support is
-partial and disabled by default. To use it, supply a modified sprite such as
-`CharacterSheet_BG.sprite` under
-`<game>\mods\<mod-name>\<mod-name>.mpq\data\hd\global\ui\controller\panel\charactersheet\v2\`,
-merge `layout-snippets\controller-characterstatspanelhd.json` into the
-`<game>\mods\<mod-name>\<mod-name>.mpq\data\global\ui\layouts\controller\characterstatspanelhd.json`,
-and enable the desired controller rows in the TOML. Without matching sprite
-slots, text may overlap or be hard to read.
+The paths below are relative to your mod's loose `data` folder or to `basefiles`:
 
-The low-resolution character-sheet and hireling layouts do not currently have
-matching resistance text widgets. Mercenary values are supported on the
-desktop HD hireling panel only.
+| Panel | Layout JSON | Background sprite |
+| --- | --- | --- |
+| Desktop HD | `global\ui\layouts\characterstatspanelhd.json` | `hd\global\ui\panel\character_sheet\character_background.sprite` (bundled) |
+| Desktop HD mercenary | `global\ui\layouts\hirelinginventorypanelhd.json` | `hd\global\ui\panel\hireling\hirelingpanel.sprite` (supply your own) |
+| Controller HD (partial, off by default) | `global\ui\layouts\controller\characterstatspanelhd.json` | `hd\global\ui\controller\panel\charactersheet\v2\CharacterSheet_BG.sprite` (supply your own) |
+
+For mercenary and controller rows, put your modified sprite in loose data
+or in `basefiles` and enable the desired rows before launch. Stock artwork
+for those panels has no slots for the new values. Low-resolution layouts
+are unsupported.
+
+The DLL embeds the default TOML. You can also copy
+`character-resistance-display.toml` to `<game>\mods\<mod-name>\d2rloader\config\`
+to set options before first launch.
+
+### Backups and manual installation
+
+Setup uses the shared mod install lock. It saves existing files before
+changing them under
+`d2rloader\plugins\basefiles-and-backups\backups\character-resistance-display\`
+in dated folders, using paths relative to the mod folder. Layouts are
+reformatted when widgets are added; the original JSON is kept in the backup
+when setup changes an existing loose layout. Each backup has a
+`created-files.txt` listing newly added files. To undo setup, close
+D2RLoader, remove the plugin, restore the originals, and review the listed
+files before removing them.
+
+For manual installation, merge the corresponding objects in
+`layout-snippets` into the layout's `children` array and install a compatible
+sprite. Automatic setup only writes to unpacked mods.
 
 ## TOML settings
 
@@ -70,7 +82,13 @@ That point moves the label and value together; their spacing and text-box
 sizes stay paired. Coordinates use the corresponding D2R layout's local
 coordinate space. The sections are `[desktop.physical]`, `[desktop.magic]`,
 `[controller.physical]`, `[controller.magic]`, `[mercenary.physical]`, and
-`[mercenary.magic]`. Restart D2RLoader after editing the TOML.
+`[mercenary.magic]`.
+
+With the optional **I Hate TOMLs** plugin installed, open its Character
+Resistance Display page to change visibility and positions live for panels
+that already have their UI files installed. Changes are saved to the TOML.
+Restart D2RLoader after editing the TOML by hand or enabling a panel that
+still needs first-launch setup.
 
 ## Compatibility
 
@@ -83,9 +101,7 @@ fingerprints do not match, it leaves those operations untouched and logs the
 reason. The plugin was built with SDK 0.4.0 / ABI 4; use a D2RLoader build that
 supports ABI 4 and the widget/thread services it requires.
 
-No specific game build is declared as in-game tested for this release. The
-plugin validates its native function signatures at runtime and does not apply
-an explicit game-version gate.
+The plugin validates its native function signatures at runtime.
 
 ## Build from source
 
@@ -96,8 +112,8 @@ separate directory, then configure this project with
 `D2RLPLUGIN_SDK_SOURCE_DIR` pointing to its 0.4.0 CMake source directory:
 
 ```powershell
-cmake -S . -B build -DD2RLPLUGIN_SDK_SOURCE_DIR="<path-to-PluginSDK-0.4.0>"
-cmake --build build --config Release
+cmake -S . -B ../build-character-resistance-display -DD2RLPLUGIN_SDK_SOURCE_DIR="<path-to-PluginSDK-0.4.0>"
+cmake --build ../build-character-resistance-display --config Release
 ```
 
 The resulting plugin DLL is written to the build output directory.
@@ -120,10 +136,3 @@ changes resistance and confirm the corresponding panel refreshes. Save and
 quit to character select, enter a character again without restarting
 D2RLoader, and confirm both panels update. A genuine zero resistance displays
 as `0%`.
-
-
-
-
-
-
-
