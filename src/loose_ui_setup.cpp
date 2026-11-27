@@ -1,3 +1,4 @@
+#include "install_token.hpp"
 #include "loose_ui_setup.h"
 #include "setup_resources.h"
 
@@ -406,7 +407,11 @@ void InstallLooseUiFiles(const D2RL::PluginContext* context, bool desktop, bool 
 		for (const auto& panel : panels) {
 			if (!panel.enabled) continue;
 			try {
-				if (InstallPanel(*context, location, panel)) changed = true;
+				const auto section=panel.widgets==CRD_DESKTOP_WIDGETS ? "installation.desktop"
+                    : panel.widgets==CRD_MERCENARY_WIDGETS ? "installation.mercenary" : "installation.controller";
+                if (InstallToken::Complete(*context,section)) continue;
+                if (InstallPanel(*context, location, panel)) changed = true;
+                InstallToken::Commit(*context,{},section);
 			} catch (const std::exception& error) {
 				char message[640]{};
 				std::snprintf(message, sizeof(message), "Character Resistance Display: could not set up '%ls': %s",

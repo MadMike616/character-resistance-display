@@ -136,3 +136,12 @@ changes resistance and confirm the corresponding panel refreshes. Save and
 quit to character select, enter a character again without restarting
 D2RLoader, and confirm both panels update. A genuine zero resistance displays
 as `0%`.
+
+
+## Installation completion
+
+After successful first-run setup, the plugin records a completion token in its TOML configuration. Later launches skip that completed setup and preserve existing files and settings. Failed setup remains retryable.
+
+Completion is recorded separately in `[installation.desktop]`, `[installation.mercenary]`, and `[installation.controller]`. Enabling a previously disabled panel runs setup for that panel only.
+
+To rerun setup intentionally, close the game and set `complete = false` in the relevant token section (`[installation.desktop]` by default).
