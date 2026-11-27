@@ -8,7 +8,7 @@ desktop HD hireling panel. Physical Resistance displays up to 50%; Magic
 Resistance displays up to 75%. Values at or above their cap are capped and
 shown in gold. Resistance values have no hover tooltips.
 
-Download the DLL and optional TOML from the [GitHub Releases page](https://github.com/MadMike616/character-resistance-display/releases/latest).
+Download the DLL from the [GitHub Releases page](https://github.com/MadMike616/character-resistance-display/releases/latest).
 The release notes provide the DLL's SHA-256 checksum.
 
 ## Install
@@ -42,9 +42,10 @@ or in `basefiles` and enable the desired rows before launch. Stock artwork
 for those panels has no slots for the new values. Low-resolution layouts
 are unsupported.
 
-The DLL embeds the default TOML. You can also copy
-`character-resistance-display.toml` to `<game>\mods\<mod-name>\d2rloader\config\`
-to set options before first launch.
+The DLL embeds its default settings and automatically creates
+`d2rloader/config/character-resistance-display.toml` on first launch.
+After closing the game, edit that generated file to change options, then
+launch again. Keep your existing configuration when upgrading.
 
 ### Backups and manual installation
 
