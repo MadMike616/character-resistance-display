@@ -1,5 +1,7 @@
 # Character Resistance Display
 
+Current release: 1.1.11. Clarified first-launch configuration creation and included the asset ownership notice with the optional sprite package.
+
 Character Resistance Display is a Windows x64 D2RLoader plugin for D2RLoader
 PluginSDK 0.4.0 / Plugin ABI 4. It reads Physical Resistance (stat 36) and
 Magic Resistance (stat 37) from the player and mercenary units. It displays

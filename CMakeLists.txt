@@ -41,3 +41,5 @@ d2rlplugin_embed_config(
 	TARGET CharacterResistanceDisplay
 	FILE "${CMAKE_CURRENT_SOURCE_DIR}/character-resistance-display.toml"
 )
+
+set_target_properties(CharacterResistanceDisplay PROPERTIES PREFIX "" OUTPUT_NAME "character-resistance-display")
